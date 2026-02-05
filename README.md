@@ -8,3 +8,7 @@ c++ file.cpp
 ./a.out
 ```
 
+```
+gcc fast-inv-sqrt.c -o fast-inv-sqrt -lm
+```
+
