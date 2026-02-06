@@ -41,11 +41,11 @@ b32 plat_mem_decommit(void* ptr, u64 size);
 b32 plat_mem_release(void* ptr, u64 size);
 
 typedef struct {
-    u64 reserve_size;
-    u64 commit_size;
+  u64 reserve_size;
+  u64 commit_size;
 
-    u64 pos;
-    u64 commit_pos;
+  u64 pos;
+  u64 commit_pos;
 } mem_arena;
 
 mem_arena* arena_create(u64 reserve_size, u64 commit_size);
@@ -56,73 +56,73 @@ void arena_pop_to(mem_arena* arena, u64 pos);
 void arena_clear(mem_arena* arena);
 
 mem_arena* arena_create(u64 reserve_size, u64 commit_size) {
-    u32 page_size = plat_get_pagesize();
+  u32 page_size = plat_get_pagesize();
 
-    reserve_size = ALIGN_UP_POW2(reserve_size, page_size);
-    commit_size = ALIGN_UP_POW2(commit_size, page_size);
+  reserve_size = ALIGN_UP_POW2(reserve_size, page_size);
+  commit_size = ALIGN_UP_POW2(commit_size, page_size);
 
-    mem_arena* arena = plat_mem_reserve(reserve_size);
+  mem_arena* arena = plat_mem_reserve(reserve_size);
 
-    if (!plat_mem_commit(arena, commit_size)) {
-        return NULL; // no memory left, abandon ship
-    }
+  if (!plat_mem_commit(arena, commit_size)) {
+    return NULL; // no memory left, abandon ship
+  }
 
-    arena->reserve_size = reserve_size;
-    arena->commit_size = commit_size;
-    arena->pos = ARENA_BASE_POS;
-    arena->commit_pos = commit_size;
+  arena->reserve_size = reserve_size;
+  arena->commit_size = commit_size;
+  arena->pos = ARENA_BASE_POS;
+  arena->commit_pos = commit_size;
 
-    return arena;
+  return arena;
 }
 
 void arena_destroy(mem_arena* arena) {
-    plat_mem_release(arena, arena->reserve_size);
+  plat_mem_release(arena, arena->reserve_size);
 }
 
 void* arena_push(mem_arena* arena, u64 size, b32 non_zero) {
-    u64 pos_aligned = ALIGN_UP_POW2(arena->pos, ARENA_ALIGN);
-    u64 new_pos = pos_aligned + size;
+  u64 pos_aligned = ALIGN_UP_POW2(arena->pos, ARENA_ALIGN);
+  u64 new_pos = pos_aligned + size;
 
-    if (new_pos > arena->reserve_size) { return NULL; }
+  if (new_pos > arena->reserve_size) { return NULL; }
 
-    if (new_pos > arena->commit_pos) {
-        u64 new_commit_pos = new_pos;
-        new_commit_pos += arena->commit_size - 1;
-        new_commit_pos -= new_commit_pos % arena->commit_size;
-        new_commit_pos = MIN(new_commit_pos, arena->reserve_size);
+  if (new_pos > arena->commit_pos) {
+    u64 new_commit_pos = new_pos;
+    new_commit_pos += arena->commit_size - 1;
+    new_commit_pos -= new_commit_pos % arena->commit_size;
+    new_commit_pos = MIN(new_commit_pos, arena->reserve_size);
 
-        u8* mem = (u8*)arena + arena->commit_pos;
-        u64 commit_size = new_commit_pos - arena->commit_pos;
+    u8* mem = (u8*)arena + arena->commit_pos;
+    u64 commit_size = new_commit_pos - arena->commit_pos;
 
-        if (!plat_mem_commit(mem, commit_size)) {
-            return NULL;
-        }
-
-        arena->commit_pos = new_commit_pos;
+    if (!plat_mem_commit(mem, commit_size)) {
+      return NULL;
     }
 
-    arena->pos = new_pos;
+    arena->commit_pos = new_commit_pos;
+  }
 
-    u8* out = (u8*)arena + pos_aligned;
+  arena->pos = new_pos;
 
-    if (!non_zero) {
-        memset(out, 0, size);
-    }
+  u8* out = (u8*)arena + pos_aligned;
 
-    return out;
+  if (!non_zero) {
+    memset(out, 0, size);
+  }
+
+  return out;
 }
 
 void arena_pop(mem_arena* arena, u64 size) {
-    size = MIN(size, arena->pos - ARENA_BASE_POS);
-    arena->pos -= size;
+  size = MIN(size, arena->pos - ARENA_BASE_POS);
+  arena->pos -= size;
 }
 
 void arena_pop_to(mem_arena* arena, u64 pos) {
-    u64 size = pos < arena->pos ? arena->pos - pos : 0;
-    arena_pop(arena, size);
+  u64 size = pos < arena->pos ? arena->pos - pos : 0;
+  arena_pop(arena, size);
 }
 void arena_clear(mem_arena* arena) {
-    arena_pop_to(arena, ARENA_BASE_POS);
+  arena_pop_to(arena, ARENA_BASE_POS);
 }
 
 // WINDOWS IMPL
@@ -130,26 +130,26 @@ void arena_clear(mem_arena* arena) {
 #include <windows.h>
 
 u32 plat_get_pagesize(void) {
-    SYSTEM_INFO sysinfo = { 0 };
-    GetSystemInfo(&sysinfo);
-    return sysinfo.dwPageSize;
+  SYSTEM_INFO sysinfo = { 0 };
+  GetSystemInfo(&sysinfo);
+  return sysinfo.dwPageSize;
 }
 
 void* plat_mem_reserve(u64 size) {
-    return VirualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
+  return VirualAlloc(NULL, size, MEM_RESERVE, PAGE_READWRITE);
 }
 
 b32 plat_mem_commit(void* ptr, u64 size) {
-    void* ret = VirualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE);
-    return ret != NULL;
+  void* ret = VirualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE);
+  return ret != NULL;
 }
 
 b32 plat_mem_decommit(void* ptr, u64 size) {
-    return VirtualFree(ptr, size, MEM_COMMIT);
+  return VirtualFree(ptr, size, MEM_COMMIT);
 }
 
 b32 plat_mem_release(void* ptr, u64 size) {
-    return VirtualFree(ptr, size, MEM_RELEASE);
+  return VirtualFree(ptr, size, MEM_RELEASE);
 }
 #endif
 
@@ -159,43 +159,43 @@ b32 plat_mem_release(void* ptr, u64 size) {
 #include <sys/mman.h>
 
 u32 plat_get_pagesize(void) {
-    return (u32)sysconf(_SC_PAGESIZE);
+  return (u32)sysconf(_SC_PAGESIZE);
 }
 
 void* plat_mem_reserve(u64 size) {
-    void* out = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (out == MAP_FAILED) {
-        return NULL;
-    }
-    return out;
+  void* out = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (out == MAP_FAILED) {
+    return NULL;
+  }
+  return out;
 }
 
 b32 plat_mem_commit(void* ptr, u64 size) {
-    i32 ret = mprotect(ptr, size, PROT_READ | PROT_WRITE);
-    return ret == 0;
+  i32 ret = mprotect(ptr, size, PROT_READ | PROT_WRITE);
+  return ret == 0;
 }
 
 b32 plat_mem_decommit(void* ptr, u64 size) {
-    i32 ret = mprotect(ptr, size, PROT_NONE);
-    if (ret != 0) return false;
-    ret = madvise(ptr, size, MADV_DONTNEED);
-    return ret == 0;
+  i32 ret = mprotect(ptr, size, PROT_NONE);
+  if (ret != 0) return false;
+  ret = madvise(ptr, size, MADV_DONTNEED);
+  return ret == 0;
 }
 
 b32 plat_mem_release(void* ptr, u64 size) {
-    i32 ret = munmap(ptr, size);
-    return ret == 0;
+  i32 ret = munmap(ptr, size);
+  return ret == 0;
 }
 #endif
 
 int main(void) {
-    mem_arena* perm_arena = arena_create(GiB(1), MiB(1));
+  mem_arena* perm_arena = arena_create(GiB(1), MiB(1));
 
-    while (1) {
-        arena_push(perm_arena, MiB(16), false);
-        getc(stdin);
-    }
+  while (1) {
+    arena_push(perm_arena, MiB(16), false);
+    getc(stdin);
+  }
 
-    arena_destroy(perm_arena);
-    return 0;
+  arena_destroy(perm_arena);
+  return 0;
 }
