@@ -2,7 +2,8 @@
  * quaternion.c
  * A complete implementation of quaternion math in C,
  * demonstrating: creation, conjugate, norm, inverse, multiplication, rotation
- * encoding, point rotation, and SLERP. $ clang quaternion.c -o quaternion -lm
+ * encoding, point rotation, and SLERP.
+ * $ clang quaternion.c -o quaternion -lm
  */
 
 #define _USE_MATH_DEFINES
