@@ -146,11 +146,11 @@ void print_title(const char *title) {
   size_t total = len + 4; // 2 spaces + 2 border chars padding
 
   char pad[total + 1];
-  memset(pad, '#', total);
+  memset(pad, '=', total);
   pad[total] = '\0';
 
   printf("%s\n", pad);
-  printf("## %s ##\n", title);
+  printf("== %s ==\n", title);
   printf("%s\n", pad);
 }
 
