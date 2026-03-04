@@ -34,7 +34,7 @@ Quaternion quat_from_axis_angle(Vec3 axis, double angle) {
   double half = angle / 2.0;
   double s = sin(half);
   return (Quaternion){
-      .w = cos(half), .x = axis.x * s, .y = axis.y * s, .z = axis.z * s};
+    .w = cos(half), .x = axis.x * s, .y = axis.y * s, .z = axis.z * s};
 }
 
 /* Identity quaternion — represents "no rotation" */
@@ -65,9 +65,9 @@ Quaternion quat_inverse(Quaternion q) {
 /* Hamilton product: apply q1 THEN q2  →  q2 * q1 */
 Quaternion quat_mul(Quaternion a, Quaternion b) {
   return (Quaternion){.w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-                      .x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-                      .y = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
-                      .z = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w};
+    .x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+    .y = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
+    .z = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w};
 }
 
 /* Dot product (used by SLERP) */
@@ -101,7 +101,7 @@ Quaternion quat_slerp(Quaternion q1, Quaternion q2, double t) {
   /* If quaternions are very close, fall back to linear interpolation */
   if (dot > 0.9995) {
     Quaternion result = {q1.w + t * (q2.w - q1.w), q1.x + t * (q2.x - q1.x),
-                         q1.y + t * (q2.y - q1.y), q1.z + t * (q2.z - q1.z)};
+      q1.y + t * (q2.y - q1.y), q1.z + t * (q2.z - q1.z)};
     return quat_normalize(result);
   }
 
@@ -111,7 +111,7 @@ Quaternion quat_slerp(Quaternion q1, Quaternion q2, double t) {
   double s2 = sin(theta) / sin(theta_0);
 
   return (Quaternion){s1 * q1.w + s2 * q2.w, s1 * q1.x + s2 * q2.x,
-                      s1 * q1.y + s2 * q2.y, s1 * q1.z + s2 * q2.z};
+    s1 * q1.y + s2 * q2.y, s1 * q1.z + s2 * q2.z};
 }
 
 /* Convert to Rotation Matrix (column-major, 3×3) */
@@ -131,7 +131,7 @@ void quat_to_matrix(Quaternion q, double m[3][3]) {
 /* Helpers */
 void print_quat(const char *label, Quaternion q) {
   printf("%-22s  w=%7.4f  x=%7.4f  y=%7.4f  z=%7.4f\n", label, q.w, q.x, q.y,
-         q.z);
+      q.z);
 }
 
 void print_vec3(const char *label, Vec3 v) {
@@ -164,7 +164,7 @@ int main(void) {
   Quaternion q = new_quat(1.0, 2.0, 3.0, 4.0);
   print_quat("Raw quaternion q:", q);
   printf("  norm(q)          = %.4f  (should be %.4f for unit)\n", quat_norm(q),
-         1.0);
+      1.0);
 
   Quaternion qu = quat_normalize(q);
   print_quat("Normalized q:", qu);
@@ -191,7 +191,7 @@ int main(void) {
   Quaternion rot90z = quat_from_axis_angle(z_axis, angle);
   print_quat("90° around Z axis:", rot90z);
   printf("  Expected: w=cos(45°)=%.4f, z=sin(45°)=%.4f\n", cos(angle / 2),
-         sin(angle / 2));
+      sin(angle / 2));
 
   /* 4. Rotating a point */
   separator("4. ROTATING A 3D POINT");
@@ -235,12 +235,12 @@ int main(void) {
   printf("  Interpolating from identity to 180° around Z:\n");
   printf("  %-6s  %-10s  %-10s  %-10s  %-10s\n", "t", "w", "x", "y", "z");
   printf("  %-6s  %-10s  %-10s  %-10s  %-10s\n", "──────", "──────────",
-         "──────────", "──────────", "──────────");
+      "──────────", "──────────", "──────────");
   for (int i = 0; i <= 5; i++) {
     double t = i / 5.0;
     Quaternion s = quat_slerp(start, end, t);
     printf("  %-6.2f  %-10.4f  %-10.4f  %-10.4f  %-10.4f\n", t, s.w, s.x, s.y,
-           s.z);
+        s.z);
   }
   printf("  → Smooth interpolation, constant angular velocity\n");
 
